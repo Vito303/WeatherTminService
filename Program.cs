@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -20,7 +19,8 @@ namespace WinService.NetCore
             {
                 ServiceBase.Run(service);
             }
-            //var resultData = TService.GetData().Result;
+            //var service = new TService();
+            //var resultData = service.GetData().Result;
             //Console.WriteLine(resultData.Current + Environment.NewLine + resultData.Place + Environment.NewLine + resultData.Temperature + resultData.Unit);
         }
     }

@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Json;
 using System.ServiceProcess;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace WinService.NetCore
 {
@@ -19,15 +20,30 @@ namespace WinService.NetCore
         System.Timers.Timer timer = new System.Timers.Timer();
         private bool resetInterval = true;
         private string filename;
+
+        public List<Settings> config { get; internal set; }
+
         public TService()
         {
             ServiceName = "TestService";
         }
 
+
+        public static List<Settings> LoadJson()
+        {
+            using (System.IO.StreamReader r = new System.IO.StreamReader("C:\\Projects\\VisualStudio\\WeatherTminService\\config.json"))
+            {
+                string json = r.ReadToEnd();
+                return JsonConvert.DeserializeObject<List<Settings>>(json);
+            }
+        }
+
         protected override void OnStart(string[] args)
         {
+            config = LoadJson();
+
             filename = CheckFileExists();
-            //File.AppendAllText(filename, $"{DateTime.Now} started.{Environment.NewLine}");
+            File.AppendAllText(filename, $"{DateTime.Now} started.{Environment.NewLine}");
 
             var minutesAfterHourToStart = 5;  // Start at 5 minutes after the hour
 
@@ -61,9 +77,9 @@ namespace WinService.NetCore
             //File.AppendAllText(filename, $"{DateTime.Now} stopped.{Environment.NewLine}");
         }
 
-        private static string CheckFileExists()
+        private string CheckFileExists()
         {
-            string filename = @"C:\Users\denis.poropat\OneDrive - Business Solutions d.o.o\Documents\Rainmeter\Skins\StickyNote\Notes\notes.txt";
+            string filename = config[0].filepath + config[0].filename;
             if (!File.Exists(filename))
             {
                 File.Create(filename);
@@ -72,12 +88,12 @@ namespace WinService.NetCore
             return filename;
         }
 
-        public static async Task<Repository> GetData()
+        public async Task<Repository> GetData()
         {
             var serializer = new DataContractJsonSerializer(typeof(Repository));
 
             //var streamTask = await client.GetAsync("https://weather-tmin.herokuapp.com/api/wdata/tmin");
-            var streamTask = await client.GetAsync("https://weather-tmin.herokuapp.com/api/wdata/solkan");
+            var streamTask = await client.GetAsync(config[0].url);
             streamTask.EnsureSuccessStatusCode();
             var responseBody = await streamTask.Content.ReadAsStreamAsync();
             var repositorie = serializer.ReadObject(responseBody) as Repository;
